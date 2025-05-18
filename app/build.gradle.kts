@@ -49,11 +49,17 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.concurrent.futures)
 
     // Kotlin Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
+
+    // Jetpack Compose
+    implementation(libs.material3)
+    implementation(libs.ui)
+    implementation(libs.ui.tooling.preview)
 
     // CameraX core library using the camera2 implementation
     // The following line is optional, as the core library is included indirectly by camera-camera2
