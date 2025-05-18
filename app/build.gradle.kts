@@ -76,6 +76,12 @@ dependencies {
     // If you want to additionally use the CameraX Extensions library
     implementation(libs.androidx.camera.extensions)
 
+    // ML Kit text recognition
+    // To recognize Latin script
+    implementation(libs.text.recognition)
+    // To recognize Japanese script
+    implementation(libs.text.recognition.japanese)
+
     testImplementation(libs.junit)
 
     androidTestImplementation(libs.androidx.junit)
