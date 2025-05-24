@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -16,6 +17,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -62,6 +64,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,6 +78,39 @@ class MainActivity : ComponentActivity() {
                     // 撮影された画像
                     var takenPicture by remember { mutableStateOf<Bitmap?>(null) }
                     var recognizedText by remember { mutableStateOf<Text?>(null) }
+                    val textToSpeech = remember {
+                        lateinit var textToSpeech: TextToSpeech
+                        textToSpeech = TextToSpeech(context) { status ->
+                            when (status) {
+                                TextToSpeech.SUCCESS -> {
+                                    when (val result = textToSpeech.setLanguage(Locale.JAPANESE)) {
+                                        TextToSpeech.LANG_AVAILABLE,
+                                        TextToSpeech.LANG_COUNTRY_AVAILABLE,
+                                        TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE ->
+                                            Log.i("TextToSpeech", "日本語が使用できます。")
+
+                                        TextToSpeech.LANG_MISSING_DATA,
+                                        TextToSpeech.LANG_NOT_SUPPORTED -> {
+                                            Log.i(
+                                                "TextToSpeech",
+                                                "日本語が使用できません。TextToSpeech.setLanguage(Locale) の返値: $result"
+                                            )
+                                        }
+
+                                        else ->
+                                            throw IllegalStateException("TextToSpeech.setLanguage(Locale) が予期せぬ値を返しました。返値: $result")
+                                    }
+                                }
+
+                                TextToSpeech.ERROR ->
+                                    Log.e("TextToSpeech", "TextToSpeech を初期化できませんでした。")
+
+                                else ->
+                                    throw IllegalArgumentException("TextToSpeech.OnInitListener.onInit(status: Int) が予期せぬパラメーターを受け取りました。status: $status")
+                            }
+                        }
+                        textToSpeech
+                    }
 
                     Column(
                         modifier = Modifier
@@ -112,6 +148,14 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             },
+                            onClickTextBlock = { textBlock ->
+                                textToSpeech.speak(
+                                    textBlock.text,
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null,
+                                    null
+                                )
+                            },
                             onError = { e ->
                                 Toast.makeText(context, "エラーが発生しました。", Toast.LENGTH_SHORT)
                                     .show()
@@ -139,6 +183,7 @@ fun CameraPreviewAndCapture(
     takenPicture: Bitmap?,
     recognizedText: Text?,
     onTakePicture: (Bitmap?) -> Unit,
+    onClickTextBlock: (TextBlock) -> Unit,
     onError: (Throwable) -> Unit,
 ) {
     val context = LocalContext.current
@@ -188,6 +233,7 @@ fun CameraPreviewAndCapture(
                         image = it,
                         textBlocks = recognizedText?.textBlocks,
                         modifier = Modifier.fillMaxWidth(),
+                        onClickTextBlock = onClickTextBlock,
                     )
 
                     // 再撮影ボタン
@@ -241,6 +287,7 @@ fun ImageAndTextBlocks(
     image: Bitmap,
     textBlocks: List<TextBlock>?,
     modifier: Modifier = Modifier,
+    onClickTextBlock: (textBlock: TextBlock) -> Unit,
 ) {
     @SuppressLint("UnusedBoxWithConstraintsScope")
     BoxWithConstraints(
@@ -274,6 +321,7 @@ fun ImageAndTextBlocks(
                 modifier = Modifier
                     .size(size)
                     .align(Alignment.Center),
+                onClickTextBlock = onClickTextBlock,
             )
         }
     }
@@ -284,6 +332,7 @@ fun TextBlocks(
     textBlocks: List<TextBlock>,
     modifier: Modifier = Modifier,
     scale: Float = 1f,
+    onClickTextBlock: (textBlock: TextBlock) -> Unit,
 ) {
     Box(
         modifier = modifier,
@@ -330,6 +379,7 @@ fun TextBlocks(
                             ),
                         )
                     }
+                    .clickable { onClickTextBlock(block) }
             )
         }
     }
