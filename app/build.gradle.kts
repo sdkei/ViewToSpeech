@@ -55,6 +55,7 @@ dependencies {
     // Kotlin Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // Jetpack Compose
     implementation(libs.material3)
@@ -75,6 +76,12 @@ dependencies {
     implementation(libs.androidx.camera.mlkit.vision)
     // If you want to additionally use the CameraX Extensions library
     implementation(libs.androidx.camera.extensions)
+
+    // ML Kit text recognition
+    // To recognize Latin script
+    implementation(libs.text.recognition)
+    // To recognize Japanese script
+    implementation(libs.text.recognition.japanese)
 
     testImplementation(libs.junit)
 
